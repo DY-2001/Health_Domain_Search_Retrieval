@@ -85,7 +85,6 @@ for item in main_query:
     for speciality in specialities:
         if (speciality.lower() == item):
             found = 1
-        # print(item, speciality)
     if (found == 0):
         print("Sorry, search again with better keywords!")
         exit()
@@ -130,9 +129,9 @@ for i in range(0, len(main_doctors)):
 
 sorted(cosine_values)
 
-with open("./psuedo_relevent_score.txt", "r+") as myfile:
-    relevent_score_doctor = myfile.read()
-relevent_score_doctor = relevent_score_doctor.split('\n')
+with open("./psuedo_relevant_score.txt", "r+") as myfile:
+    relevant_score_doctor = myfile.read()
+relevant_score_doctor = relevant_score_doctor.split('\n')
 
 matching_doctors_cosine = []
 for item in cosine_values:
@@ -140,7 +139,7 @@ for item in cosine_values:
 
 matching_doctors_with_score = []
 for item in matching_doctors_cosine:
-    matching_doctors_with_score.append([[relevent_score_doctor[item]], item])
+    matching_doctors_with_score.append([[relevant_score_doctor[item]], item])
 matching_doctors_with_score = sorted(matching_doctors_with_score, reverse=True)
 
 
@@ -151,8 +150,6 @@ for item in matching_doctors_with_score:
 need_doctors = []
 for item in matching_doctors:
     need_doctors.append(doctors[item])
-# print(doctors) all the doctors
-# need_doctor is corresponding doctor of matching id in matching_doctor
 
 filter_by_experiance = []
 filter_by_fees = []
@@ -178,14 +175,14 @@ elif (len(filter_fees) > 0):
         j = j + 1
 
 
-def modify_relevent_score(right_doctor_id):
-    with open("./psuedo_relevent_score.txt", "r+") as myfile:
-        relevent_score = myfile.read()
-    relevent_score = relevent_score.split('\n')
+def modify_relevant_score(right_doctor_id):
+    with open("./psuedo_relevant_score.txt", "r+") as myfile:
+        relevant_score = myfile.read()
+    relevant_score = relevant_score.split('\n')
 
-    relevent_score[right_doctor_id] = int(relevent_score[right_doctor_id]) + 1
-    f = open("./psuedo_relevent_score.txt", "w")
-    for item in relevent_score:
+    relevant_score[right_doctor_id] = int(relevant_score[right_doctor_id]) + 1
+    f = open("./psuedo_relevant_score.txt", "w")
+    for item in relevant_score:
         f.write(str(item) + "\n")
     f.close()
 
@@ -208,12 +205,12 @@ if (len(filter_by_both) > 0):
             id_doctor = input('Which Doctor matching with your search: ')
             right_doctor = filter_by_both[int(id_doctor) - 1][1]
             right_doctor_id = matching_doctors[right_doctor]
-            modify_relevent_score(right_doctor_id)
+            modify_relevant_score(right_doctor_id)
             exit()
     id_doctor = input('Which Doctor matching with your search: ')
     right_doctor = filter_by_both[int(id_doctor) - 1][1]
     right_doctor_id = matching_doctors[right_doctor]
-    modify_relevent_score(right_doctor_id)
+    modify_relevant_score(right_doctor_id)
     exit()
 
 elif (len(filter_by_experiance) > 0):
@@ -234,12 +231,12 @@ elif (len(filter_by_experiance) > 0):
             id_doctor = input('Which Doctor matching with your search: ')
             right_doctor = filter_by_both[int(id_doctor) - 1][1]
             right_doctor_id = matching_doctors[right_doctor]
-            modify_relevent_score(right_doctor_id)
+            modify_relevant_score(right_doctor_id)
             exit()
     id_doctor = input('Which Doctor matching with your search: ')
     right_doctor = filter_by_both[int(id_doctor) - 1][1]
     right_doctor_id = matching_doctors[right_doctor]
-    modify_relevent_score(right_doctor_id)
+    modify_relevant_score(right_doctor_id)
     exit()
 
 elif (len(filter_by_fees) > 0):
@@ -260,12 +257,12 @@ elif (len(filter_by_fees) > 0):
             id_doctor = input('Which Doctor matching with your search: ')
             right_doctor = filter_by_both[int(id_doctor) - 1][1]
             right_doctor_id = matching_doctors[right_doctor]
-            modify_relevent_score(right_doctor_id)
+            modify_relevant_score(right_doctor_id)
             exit()
     id_doctor = input('Which Doctor matching with your search: ')
     right_doctor = filter_by_both[int(id_doctor) - 1][1]
     right_doctor_id = matching_doctors[right_doctor]
-    modify_relevent_score(right_doctor_id)
+    modify_relevant_score(right_doctor_id)
     exit()
 
 if ((len(filter_by_both) == 0) and (len(filter_by_experiance) == 0) and (len(filter_by_fees) == 0)):
@@ -285,9 +282,9 @@ if ((len(filter_by_both) == 0) and (len(filter_by_experiance) == 0) and (len(fil
         if (i == 11):
             id_doctor = input('Which Doctor matching with your search: ')
             right_doctor_id = matching_doctors[int(id_doctor) - 1]
-            modify_relevent_score(right_doctor_id)
+            modify_relevant_score(right_doctor_id)
             exit()
     id_doctor = input('Which Doctor matching with your search: ')
     right_doctor_id = matching_doctors[int(id_doctor) - 1]
-    modify_relevent_score(right_doctor_id)
+    modify_relevant_score(right_doctor_id)
     exit()
