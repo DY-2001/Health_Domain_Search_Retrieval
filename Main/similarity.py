@@ -17,6 +17,7 @@ import re
 filter_experiance = filter1()
 filter_fees = filter2()
 
+
 def get_cities():
     response = requests.get(
         'https://en.wikipedia.org/wiki/List_of_cities_in_India_by_population')
@@ -32,15 +33,15 @@ def get_cities():
 
 cities = get_cities()
 cities = cities[:100]
-specialities = ['dentist','dermatologist', 'homoeopath', 'ayurveda']
+specialities = ['dentist', 'dermatologist', 'homoeopath', 'ayurveda']
 
 
-with open ("./../Data/input.txt", "r") as myfile:
+with open("./../Data/input.txt", "r") as myfile:
     data = myfile.read().lower()
 
 data = data.split('\n')
-for i in range(0, len(data)): 
-     data[i] = data[i].split('\'')
+for i in range(0, len(data)):
+    data[i] = data[i].split('\'')
 
 doctors = []
 doctors = doctors_fill(doctors, data)
@@ -48,10 +49,11 @@ doctors = doctors_fill(doctors, data)
 dictionary = {}
 dictionary = dictionary_fill(dictionary, doctors, cities, specialities)
 
-main_query = [] 
+main_query = []
 main_query = main_query_fill(main_query)
 
 WORD = re.compile(r"\w+")
+
 
 def get_cosine(vec1, vec2):
     intersection = set(vec1.keys()) & set(vec2.keys())
@@ -66,6 +68,7 @@ def get_cosine(vec1, vec2):
     else:
         return float(numerator) / denominator
 
+
 def text_to_vector(text):
     words = WORD.findall(text)
     return Counter(words)
@@ -76,46 +79,49 @@ new_string_query = ""
 
 found = 0
 for item in main_query:
-    for city in cities: 
-        if(city.lower() == item):
-            found = 1;
-    for speciality in specialities: 
-        if(speciality.lower() == item):
-            found = 1;
-        # print(item, speciality)    
-    if(found == 0):
+    for city in cities:
+        if (city.lower() == item):
+            found = 1
+    for speciality in specialities:
+        if (speciality.lower() == item):
+            found = 1
+        # print(item, speciality)
+    if (found == 0):
         print("Sorry, search again with better keywords!")
-        exit() 
+        exit()
     else:
-        found = 0               
-    
-if(len(main_query) == 0):
+        found = 0
+
+if (len(main_query) == 0):
     print("Sorry! We couldn't find Doctor.")
     exit()
-elif(len(main_query) == 1):
+elif (len(main_query) == 1):
     intersection_list = dictionary[main_query[0]]
     new_string_query = new_string_query + main_query[0]
-elif(len(main_query) == 2):
-    intersection_list = list(set(dictionary[main_query[0]]) & set(dictionary[main_query[1]]))
+elif (len(main_query) == 2):
+    intersection_list = list(
+        set(dictionary[main_query[0]]) & set(dictionary[main_query[1]]))
     new_string_query = new_string_query + main_query[0]
     new_string_query = new_string_query + " " + main_query[1]
-elif(len(main_query) > 2):
+elif (len(main_query) > 2):
     print("Sorry, Query is not Searchable!")
     exit()
-    
-main_doctors = []    
+
+main_doctors = []
 only_main_doctor = ""
-if(len(intersection_list) > 0):
+if (len(intersection_list) > 0):
     for i in range(0, len(intersection_list)):
         for j in range(0, 7):
-            if(j == 0):
-                only_main_doctor = only_main_doctor + str(doctors[intersection_list[i]][j])
+            if (j == 0):
+                only_main_doctor = only_main_doctor + \
+                    str(doctors[intersection_list[i]][j])
             else:
-                only_main_doctor = only_main_doctor + " " + str(doctors[intersection_list[i]][j])    
+                only_main_doctor = only_main_doctor + " " + \
+                    str(doctors[intersection_list[i]][j])
         main_doctors.append(only_main_doctor)
-        only_main_doctor = ""        
-    
-cosine_values = []    
+        only_main_doctor = ""
+
+cosine_values = []
 for i in range(0, len(main_doctors)):
     vector1 = text_to_vector(main_doctors[i])
     vector2 = text_to_vector(new_string_query)
@@ -124,78 +130,149 @@ for i in range(0, len(main_doctors)):
 
 sorted(cosine_values)
 
-matching_doctors = []
+with open("./psuedo_relevent_score.txt", "r+") as myfile:
+    relevent_score_doctor = myfile.read()
+relevent_score_doctor = relevent_score_doctor.split('\n')
+
+matching_doctors_cosine = []
 for item in cosine_values:
+    matching_doctors_cosine.append(item[1])
+
+matching_doctors_with_score = []
+for item in matching_doctors_cosine:
+    matching_doctors_with_score.append([[relevent_score_doctor[item]], item])
+matching_doctors_with_score = sorted(matching_doctors_with_score, reverse=True)
+
+
+matching_doctors = []
+for item in matching_doctors_with_score:
     matching_doctors.append(item[1])
- 
+
 need_doctors = []
 for item in matching_doctors:
     need_doctors.append(doctors[item])
+# print(doctors) all the doctors
+# need_doctor is corresponding doctor of matching id in matching_doctor
 
 filter_by_experiance = []
 filter_by_fees = []
 filter_by_both = []
 
-if(len(filter_experiance) > 0 and len(filter_fees) > 0):
+if (len(filter_experiance) > 0 and len(filter_fees) > 0):
+    j = 0
     for item in need_doctors:
-        if((int(item[1]) >= int(filter_experiance)) and (int(item[3]) <= int(filter_fees))):
-            filter_by_both.append(item)
-elif(len(filter_experiance) > 0):
+        if ((int(item[1]) >= int(filter_experiance)) and (int(item[3]) <= int(filter_fees))):
+            filter_by_both.append([item, j])
+        j = j + 1
+elif (len(filter_experiance) > 0):
+    j = 0
     for item in need_doctors:
-        if(int(item[1]) >= int(filter_experiance)):
-            filter_by_experiance.append(item)      
-elif(len(filter_fees) > 0):
+        if (int(item[1]) >= int(filter_experiance)):
+            filter_by_experiance.append([item, j])
+        j = j + 1
+elif (len(filter_fees) > 0):
+    j = 0
     for item in need_doctors:
-        if(int(item[3]) <= int(filter_fees)):
-            filter_by_experiance.append(item)        
+        if (int(item[3]) <= int(filter_fees)):
+            filter_by_experiance.append([item, j])
+        j = j + 1
 
-if(len(filter_by_both) > 0):
+
+def modify_relevent_score(right_doctor_id):
+    with open("./psuedo_relevent_score.txt", "r+") as myfile:
+        relevent_score = myfile.read()
+    relevent_score = relevent_score.split('\n')
+
+    relevent_score[right_doctor_id] = int(relevent_score[right_doctor_id]) + 1
+    f = open("./psuedo_relevent_score.txt", "w")
+    for item in relevent_score:
+        f.write(str(item) + "\n")
+    f.close()
+
+
+if (len(filter_by_both) > 0):
+    i = 1
     print("\n")
     for item in filter_by_both:
-        print("Docter Name: ", item[0])
-        print("Speciality: ", item[2])
-        print("Experiance: ", item[1], "years")
-        print("Consultation Fees: ", item[3], "/-")
-        print("Rating: ", item[4])
-        print("Locality: ", item[5])
-        print("City: ", item[6])
-        print("\n")  
+        print(i)
+        print("Docter Name: ", item[0][0])
+        print("Speciality: ", item[0][2])
+        print("Experiance: ", item[0][1], "years")
+        print("Consultation Fees: ", item[0][3], "/-")
+        print("Rating: ", item[0][4])
+        print("Locality: ", item[0][5])
+        print("City: ", item[0][6])
+        print("\n")
         i = i + 1
-        if(i == 10):
+        if (i == 11):
+            id_doctor = input('Which Doctor matching with your search: ')
+            right_doctor = filter_by_both[int(id_doctor) - 1][1]
+            right_doctor_id = matching_doctors[right_doctor]
+            modify_relevent_score(right_doctor_id)
             exit()
-elif(len(filter_by_experiance) > 0):
+    id_doctor = input('Which Doctor matching with your search: ')
+    right_doctor = filter_by_both[int(id_doctor) - 1][1]
+    right_doctor_id = matching_doctors[right_doctor]
+    modify_relevent_score(right_doctor_id)
+    exit()
+
+elif (len(filter_by_experiance) > 0):
+    i = 1
     print("\n")
     for item in filter_by_experiance:
-        print("Docter Name: ", item[0])
-        print("Speciality: ", item[2])
-        print("Experiance: ", item[1], "years")
-        print("Consultation Fees: ", item[3], "/-")
-        print("Rating: ", item[4])
-        print("Locality: ", item[5])
-        print("City: ", item[6])
-        print("\n")  
+        print(i)
+        print("Docter Name: ", item[0][0])
+        print("Speciality: ", item[0][2])
+        print("Experiance: ", item[0][1], "years")
+        print("Consultation Fees: ", item[0][3], "/-")
+        print("Rating: ", item[0][4])
+        print("Locality: ", item[0][5])
+        print("City: ", item[0][6])
+        print("\n")
         i = i + 1
-        if(i == 10):
+        if (i == 11):
+            id_doctor = input('Which Doctor matching with your search: ')
+            right_doctor = filter_by_both[int(id_doctor) - 1][1]
+            right_doctor_id = matching_doctors[right_doctor]
+            modify_relevent_score(right_doctor_id)
             exit()
-elif(len(filter_by_fees) > 0):
+    id_doctor = input('Which Doctor matching with your search: ')
+    right_doctor = filter_by_both[int(id_doctor) - 1][1]
+    right_doctor_id = matching_doctors[right_doctor]
+    modify_relevent_score(right_doctor_id)
+    exit()
+
+elif (len(filter_by_fees) > 0):
+    i = 1
     print("\n")
     for item in filter_by_fees:
-        print("Docter Name: ", item[0])
-        print("Speciality: ", item[2])
-        print("Experiance: ", item[1], "years")
-        print("Consultation Fees: ", item[3], "/-")
-        print("Rating: ", item[4])
-        print("Locality: ", item[5])
-        print("City: ", item[6])
-        print("\n")        
+        print(i)
+        print("Docter Name: ", item[0][0])
+        print("Speciality: ", item[0][2])
+        print("Experiance: ", item[0][1], "years")
+        print("Consultation Fees: ", item[0][3], "/-")
+        print("Rating: ", item[0][4])
+        print("Locality: ", item[0][5])
+        print("City: ", item[0][6])
+        print("\n")
         i = i + 1
-        if(i == 10):
+        if (i == 11):
+            id_doctor = input('Which Doctor matching with your search: ')
+            right_doctor = filter_by_both[int(id_doctor) - 1][1]
+            right_doctor_id = matching_doctors[right_doctor]
+            modify_relevent_score(right_doctor_id)
             exit()
-        
-if((len(filter_by_both) == 0) and (len(filter_by_experiance) == 0) and (len(filter_by_fees) == 0)):
-    i = 0;
+    id_doctor = input('Which Doctor matching with your search: ')
+    right_doctor = filter_by_both[int(id_doctor) - 1][1]
+    right_doctor_id = matching_doctors[right_doctor]
+    modify_relevent_score(right_doctor_id)
+    exit()
+
+if ((len(filter_by_both) == 0) and (len(filter_by_experiance) == 0) and (len(filter_by_fees) == 0)):
+    i = 1
     print("\n")
     for item in need_doctors:
+        print(i)
         print("Docter Name: ", item[0])
         print("Speciality: ", item[2])
         print("Experiance: ", item[1], "years")
@@ -203,7 +280,14 @@ if((len(filter_by_both) == 0) and (len(filter_by_experiance) == 0) and (len(filt
         print("Rating: ", item[4])
         print("Locality: ", item[5])
         print("City: ", item[6])
-        print("\n")   
+        print("\n")
         i = i + 1
-        if(i == 10):
+        if (i == 11):
+            id_doctor = input('Which Doctor matching with your search: ')
+            right_doctor_id = matching_doctors[int(id_doctor) - 1]
+            modify_relevent_score(right_doctor_id)
             exit()
+    id_doctor = input('Which Doctor matching with your search: ')
+    right_doctor_id = matching_doctors[int(id_doctor) - 1]
+    modify_relevent_score(right_doctor_id)
+    exit()
